@@ -1,0 +1,15 @@
+services:
+    wmsentry.logger:
+        class: Drupal\wmsentry\Logger\Sentry
+        arguments:
+            - '@config.factory'
+            - '@logger.log_message_parser'
+            - '@event_dispatcher'
+        tags:
+            - { name: logger }
+
+    wmsentry.excluded_tags.subscriber:
+        class: Drupal\wmsentry\EventSubscriber\ExcludedTagsSubscriber
+        arguments:
+            - '@config.factory'
+        tags: [{ name: event_subscriber }]

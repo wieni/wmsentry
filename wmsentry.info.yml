@@ -1,0 +1,5 @@
+name: wmsentry
+type: module
+description: A module for sending errors to Sentry in Drupal 8.
+core: 8.x
+package: Wieni

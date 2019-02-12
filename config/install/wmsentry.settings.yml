@@ -1,0 +1,5 @@
+dsn: ''
+release: ''
+environment: ''
+excluded_exceptions: {  }
+excluded_tags: {  }
