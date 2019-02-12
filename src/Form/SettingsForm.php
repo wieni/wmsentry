@@ -1,0 +1,118 @@
+<?php
+
+namespace Drupal\wmsentry\Form;
+
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+
+class SettingsForm extends ConfigFormBase
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function getFormId()
+    {
+        return 'wmsentry_settings';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function buildForm(array $form, FormStateInterface $form_state)
+    {
+        $config = $this->config('wmsentry.settings');
+
+        $form['dsn'] = [
+            '#type' => 'textfield',
+            '#title' => 'DSN',
+            '#description' => 'Data Source Name. A representation of the configuration required by the Sentry SDK.',
+            '#default_value' => $config->get('dsn'),
+        ];
+
+        $form['release'] = [
+            '#type' => 'textfield',
+            '#title' => 'Release',
+            '#description' => 'A string representing the version of your code that is deployed to an environment.',
+            '#default_value' => $config->get('release'),
+        ];
+
+        $form['environment'] = [
+            '#type' => 'textfield',
+            '#title' => 'Environment',
+            '#description' => 'A string representing the environment of this application (e.g. local, development, production)',
+            '#default_value' => $config->get('environment'),
+        ];
+
+        $form['excluded_exceptions'] = [
+            '#type' => 'textarea',
+            '#title' => 'Excluded exceptions',
+            '#description' => 'Sometimes you may want to skip capturing certain exceptions. This option sets the FQCN of the classes of the exceptions that you don’t want to capture. The check is done using the instanceof operator against each item of the array and if at least one of them passes the event will be discarded.',
+            '#default_value' => $this->transformExcludedExceptions($config->get('excluded_exceptions')),
+        ];
+
+        $form['excluded_tags'] = [
+            '#type' => 'textarea',
+            '#title' => 'Excluded tags',
+            '#description' => 'A list of tags that - if present on an event - will cause the captured exception to be skipped. Tags and their values should be seperated with a colon.',
+            '#default_value' => $this->transformExcludedTags($config->get('excluded_tags')),
+        ];
+
+        return parent::buildForm($form, $form_state);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function submitForm(array &$form, FormStateInterface $form_state) {
+        $this->config('wmsentry.settings')
+            ->set('dsn', $form_state->getValue('dsn'))
+            ->set('release', $form_state->getValue('release'))
+            ->set('environment', $form_state->getValue('environment'))
+            ->set('excluded_exceptions', $this->transformExcludedExceptions($form_state->getValue('excluded_exceptions')))
+            ->set('excluded_tags', $this->transformExcludedTags($form_state->getValue('excluded_tags')))
+            ->save();
+
+        parent::submitForm($form, $form_state);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getEditableConfigNames()
+    {
+        return ['wmsentry.settings'];
+    }
+
+    protected function transformExcludedExceptions($value)
+    {
+        if (is_string($value)) {
+            return array_map('trim', explode(PHP_EOL, $value));
+        }
+
+        if (is_array($value)) {
+            return implode(PHP_EOL, $value);
+        }
+
+        return null;
+    }
+
+    protected function transformExcludedTags($value)
+    {
+        if (is_string($value)) {
+            $lines = array_map('trim', explode(PHP_EOL, $value));
+            return array_map(function (string $line) {
+                [$tag, $value] = array_map('trim', explode(':', $line));
+                return compact('tag', 'value');
+            }, $lines);
+        }
+
+        if (is_array($value)) {
+            $lines = array_map(function (array $line) {
+                return "{$line['tag']}: {$line['value']}";
+            }, $value);
+            return implode(PHP_EOL, $lines);
+        }
+
+        return null;
+    }
+}

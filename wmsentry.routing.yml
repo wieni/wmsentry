@@ -1,0 +1,7 @@
+wmsentry.settings:
+    path: /admin/config/development/logging/sentry
+    defaults:
+        _form: Drupal\wmsentry\Form\SettingsForm
+        _title: Sentry
+    requirements:
+        _permission: 'administer wmsentry settings'

@@ -1,0 +1,29 @@
+wmsentry.settings:
+    type: config_object
+    label: Settings
+    mapping:
+        dsn:
+            type: string
+            label: 'Data Source Name. A representation of the configuration required by the Sentry SDK.'
+        release:
+            type: string
+            label: 'A string representing the version of your code that is deployed to an environment.'
+        environment:
+            type: string
+            label: 'A string representing the environment of this application (e.g. local, development, production)'
+        excluded_exceptions:
+            type: sequence
+            label: 'Sometimes you may want to skip capturing certain exceptions. This option sets the FQCN of the classes of the exceptions that you don’t want to capture. The check is done using the instanceof operator against each item of the array and if at least one of them passes the event will be discarded.'
+            sequence:
+                type: string
+                label: 'Class name'
+        excluded_tags:
+            type: mapping
+            label: 'A list of tags that - if present on an event - will cause the captured exception to be skipped.'
+            mapping:
+                tag:
+                    type: string
+                    label: Tag
+                value:
+                    type: string
+                    label: Value
