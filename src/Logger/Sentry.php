@@ -177,7 +177,7 @@ class Sentry implements LoggerInterface
     protected function getUserData(array $context): array
     {
         $data = [
-            'id' => $context['uid'] ?? '0',
+            'id' => (int) ($context['uid'] ?? '0'),
             'ip_address' => $context['ip'],
         ];
 
