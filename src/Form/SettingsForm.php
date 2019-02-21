@@ -77,7 +77,7 @@ class SettingsForm extends ConfigFormBase
             ->set('dsn', $form_state->getValue('dsn'))
             ->set('release', $form_state->getValue('release'))
             ->set('environment', $form_state->getValue('environment'))
-            ->set('log_levels', $this->transformLogLevels($form_state->getValue('log_levels')))
+            ->set('log_levels', $form_state->getValue('log_levels'))
             ->set('excluded_exceptions', $this->transformExcludedExceptions($form_state->getValue('excluded_exceptions')))
             ->set('excluded_tags', $this->transformExcludedTags($form_state->getValue('excluded_tags')))
             ->save();
@@ -135,12 +135,5 @@ class SettingsForm extends ConfigFormBase
         }
 
         return null;
-    }
-
-    protected function transformLogLevels(array $levels)
-    {
-        return array_map(function ($value) {
-            return $value ? 1 : 0;
-        }, $levels);
     }
 }
