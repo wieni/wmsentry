@@ -189,6 +189,13 @@ class Sentry implements LoggerInterface
         return $data;
     }
 
+    protected function isLogLevelIncluded(int $level): bool
+    {
+        $index = $level + 1;
+
+        return !empty($this->config->get("log_levels.{$index}"));
+    }
+
     public function onBeforeSend(Event $event): ?Event
     {
         /** @var SentryBeforeSendEvent $beforeSendEvent */
@@ -210,6 +217,10 @@ class Sentry implements LoggerInterface
      */
     public function log($level, $message, array $context = [])
     {
+        if (!$this->isLogLevelIncluded($level)) {
+            return;
+        }
+
         $scope = $this->buildScope($context);
 
         $payload = [

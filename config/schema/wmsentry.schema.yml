@@ -27,3 +27,31 @@ wmsentry.settings:
                 value:
                     type: string
                     label: Value
+        log_levels:
+            type: mapping
+            label: 'The RFC log levels that should be captured by Sentry'
+            mapping:
+                1:
+                    type: integer
+                    label: 'Emergency'
+                2:
+                    type: integer
+                    label: 'Alert'
+                3:
+                    type: integer
+                    label: 'Critical'
+                4:
+                    type: integer
+                    label: 'Error'
+                5:
+                    type: integer
+                    label: 'Warning'
+                6:
+                    type: integer
+                    label: 'Notice'
+                7:
+                    type: integer
+                    label: 'Info'
+                8:
+                    type: integer
+                    label: 'Debug'

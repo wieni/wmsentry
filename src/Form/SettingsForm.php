@@ -4,6 +4,7 @@ namespace Drupal\wmsentry\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Logger\RfcLogLevel;
 
 class SettingsForm extends ConfigFormBase
 {
@@ -43,6 +44,14 @@ class SettingsForm extends ConfigFormBase
             '#default_value' => $config->get('environment'),
         ];
 
+        $form['log_levels'] = [
+            '#type' => 'checkboxes',
+            '#title' => 'Log levels',
+            '#description' => 'The RFC log levels that should be captured by Sentry',
+            '#default_value' => $config->get('log_levels') ?? [],
+            '#options' => $this->getLogLevelOptions(),
+        ];
+
         $form['excluded_exceptions'] = [
             '#type' => 'textarea',
             '#title' => 'Excluded exceptions',
@@ -68,6 +77,7 @@ class SettingsForm extends ConfigFormBase
             ->set('dsn', $form_state->getValue('dsn'))
             ->set('release', $form_state->getValue('release'))
             ->set('environment', $form_state->getValue('environment'))
+            ->set('log_levels', $this->transformLogLevels($form_state->getValue('log_levels')))
             ->set('excluded_exceptions', $this->transformExcludedExceptions($form_state->getValue('excluded_exceptions')))
             ->set('excluded_tags', $this->transformExcludedTags($form_state->getValue('excluded_tags')))
             ->save();
@@ -81,6 +91,17 @@ class SettingsForm extends ConfigFormBase
     protected function getEditableConfigNames()
     {
         return ['wmsentry.settings'];
+    }
+
+    protected function getLogLevelOptions(): array
+    {
+        $options = [];
+
+        foreach (RfcLogLevel::getLevels() as $level => $label) {
+            $options[$level + 1] = $label;
+        }
+
+        return $options;
     }
 
     protected function transformExcludedExceptions($value)
@@ -114,5 +135,12 @@ class SettingsForm extends ConfigFormBase
         }
 
         return null;
+    }
+
+    protected function transformLogLevels(array $levels)
+    {
+        return array_map(function ($value) {
+            return $value ? 1 : 0;
+        }, $levels);
     }
 }
