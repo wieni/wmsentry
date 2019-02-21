@@ -1,0 +1,5 @@
+wmsentry.settings:
+    title: 'Sentry'
+    parent: system.logging_settings
+    description: 'Configure the wmsentry module.'
+    route_name: wmsentry.settings
