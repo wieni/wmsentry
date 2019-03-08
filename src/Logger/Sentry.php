@@ -50,6 +50,12 @@ class Sentry implements LoggerInterface
         $this->parser = $parser;
         $this->eventDispatcher = $eventDispatcher;
         $this->client = $this->getClient();
+
+        /**
+         * Replace the Drupal error handler
+         * @see _wmsentry_error_handler_real
+         */
+        set_error_handler('_wmsentry_error_handler_real');
     }
 
     protected function getClient(): ?ClientInterface
