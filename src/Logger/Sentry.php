@@ -5,6 +5,7 @@ namespace Drupal\wmsentry\Logger;
 use Drupal\Component\ClassFinder\ClassFinder;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\Logger\RfcLogLevel;
@@ -40,21 +41,26 @@ class Sentry implements LoggerInterface
     protected $client;
     /** @var EventDispatcherInterface */
     protected $eventDispatcher;
+    /** @var ModuleHandlerInterface */
+    protected $moduleHandler;
 
     public function __construct(
         ConfigFactoryInterface $config,
         LogMessageParserInterface $parser,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        ModuleHandlerInterface $moduleHandler
     ) {
         $this->config = $config->get('wmsentry.settings');
         $this->parser = $parser;
         $this->eventDispatcher = $eventDispatcher;
+        $this->moduleHandler = $moduleHandler;
         $this->client = $this->getClient();
 
         /**
          * Replace the Drupal error handler
          * @see _wmsentry_error_handler_real
          */
+        $this->moduleHandler->loadInclude('wmsentry', 'module');
         set_error_handler('_wmsentry_error_handler_real');
     }
 

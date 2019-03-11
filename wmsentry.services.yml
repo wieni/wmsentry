@@ -5,6 +5,7 @@ services:
             - '@config.factory'
             - '@logger.log_message_parser'
             - '@event_dispatcher'
+            - '@module_handler'
         tags:
             - { name: logger }
 
