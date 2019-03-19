@@ -10,5 +10,6 @@ log_levels:
   6: 0
   7: 0
   8: 0
+include_stacktrace_func_args: false
 excluded_exceptions: {  }
 excluded_tags: {  }

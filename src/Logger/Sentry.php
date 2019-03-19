@@ -155,6 +155,11 @@ class Sentry implements LoggerInterface
             function (Stacktrace $stacktrace, array $frame) {
                 $file = $frame['file'] ?? '[internal]';
                 $line = $frame['line'] ?? 0;
+
+                if (!$this->config->get('include_stacktrace_func_args')) {
+                    $frame['args'] = [];
+                }
+
                 $stacktrace->addFrame($file, $line, $frame);
 
                 return $stacktrace;

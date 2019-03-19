@@ -11,6 +11,9 @@ wmsentry.settings:
         environment:
             type: string
             label: 'A string representing the environment of this application (e.g. local, development, production)'
+        include_stacktrace_func_args:
+            type: boolean
+            label: 'Determines whether function arguments should be included in the stack trace.'
         excluded_exceptions:
             type: sequence
             label: 'Sometimes you may want to skip capturing certain exceptions. This option sets the FQCN of the classes of the exceptions that you don’t want to capture. The check is done using the instanceof operator against each item of the array and if at least one of them passes the event will be discarded.'

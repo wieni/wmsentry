@@ -52,6 +52,12 @@ class SettingsForm extends ConfigFormBase
             '#options' => $this->getLogLevelOptions(),
         ];
 
+        $form['include_stacktrace_func_args'] = [
+            '#type' => 'checkbox',
+            '#title' => 'Include function arguments in stack trace',
+            '#default_value' => $config->get('include_stacktrace_func_args'),
+        ];
+
         $form['excluded_exceptions'] = [
             '#type' => 'textarea',
             '#title' => 'Excluded exceptions',
@@ -78,6 +84,7 @@ class SettingsForm extends ConfigFormBase
             ->set('release', $form_state->getValue('release'))
             ->set('environment', $form_state->getValue('environment'))
             ->set('log_levels', $form_state->getValue('log_levels'))
+            ->set('include_stacktrace_func_args', $form_state->getValue('include_stacktrace_func_args'))
             ->set('excluded_exceptions', $this->transformExcludedExceptions($form_state->getValue('excluded_exceptions')))
             ->set('excluded_tags', $this->transformExcludedTags($form_state->getValue('excluded_tags')))
             ->save();
