@@ -146,7 +146,7 @@ class Sentry implements LoggerInterface
                 ]
             );
 
-            while (in_array($backtrace[0]['file'], $toIgnore, true)) {
+            while (!empty($backtrace) && in_array($backtrace[0]['file'], $toIgnore, true)) {
                 array_shift($backtrace);
             }
         }
