@@ -135,12 +135,19 @@ class Sentry implements LoggerInterface
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $finder = new ClassFinder();
 
-            if ($backtrace[0]['file'] === realpath($finder->findFile(\Drupal\Core\Logger\LoggerChannel::class))) {
-                array_shift($stack);
+            $toIgnore = array_map(
+                function (string $className) use ($finder) {
+                    return realpath($finder->findFile($className));
+                },
+                [
+                    self::class,
+                    \Drupal\Core\Logger\LoggerChannel::class,
+                    \Psr\Log\LoggerTrait::class,
+                ]
+            );
 
-                if ($stack[0]['file'] === realpath($finder->findFile(\Psr\Log\LoggerTrait::class))) {
-                    array_shift($stack);
-                }
+            while (in_array($backtrace[0]['file'], $toIgnore, true)) {
+                array_shift($backtrace);
             }
         }
 
