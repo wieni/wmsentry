@@ -5,11 +5,13 @@ namespace Drupal\wmsentry\Logger;
 use Drupal\Component\ClassFinder\ClassFinder;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\Logger\RfcLogLevel;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\wmcustom\Entity\User\User;
 use Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent;
 use Drupal\wmsentry\Event\SentryBeforeSendEvent;
 use Drupal\wmsentry\Event\SentryOptionsAlterEvent;
@@ -43,17 +45,21 @@ class Sentry implements LoggerInterface
     protected $eventDispatcher;
     /** @var ModuleHandlerInterface */
     protected $moduleHandler;
+    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface  */
+    protected $entityTypeManager;
 
     public function __construct(
         ConfigFactoryInterface $config,
         LogMessageParserInterface $parser,
         EventDispatcherInterface $eventDispatcher,
-        ModuleHandlerInterface $moduleHandler
+        ModuleHandlerInterface $moduleHandler,
+        EntityTypeManagerInterface $entityTypeManager
     ) {
         $this->config = $config->get('wmsentry.settings');
         $this->parser = $parser;
         $this->eventDispatcher = $eventDispatcher;
         $this->moduleHandler = $moduleHandler;
+        $this->entityTypeManager = $entityTypeManager;
         $this->client = $this->getClient();
 
         /**
@@ -205,9 +211,16 @@ class Sentry implements LoggerInterface
             'ip_address' => $context['ip'],
         ];
 
-        if ($context['user'] instanceof AccountProxyInterface) {
-            $data['username'] = $context['user']->getDisplayName();
-            $data['email'] = $context['user']->getEmail();
+        if (!isset($context['uid'])) {
+            return $data;
+        }
+
+        /* @var \Drupal\user\Entity\User $user */
+        $user = $this->entityTypeManager->getStorage('user')->load($context['uid']);
+
+        if ($user) {
+            $data['username'] = $user->getDisplayName();
+            $data['email'] = $user->getEmail();
         }
 
         return $data;

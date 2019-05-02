@@ -6,6 +6,7 @@ services:
             - '@logger.log_message_parser'
             - '@event_dispatcher'
             - '@module_handler'
+            - '@entity_type.manager'
         tags:
             - { name: logger }
 
