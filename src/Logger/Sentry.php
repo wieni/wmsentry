@@ -199,7 +199,7 @@ class Sentry implements LoggerInterface
 
         $scope->setUser($this->getUserData($context));
 
-        $this->eventDispatcher->dispatch(WmsentryEvents::SCOPE_ALTER, new SentryScopeAlterEvent($scope));
+        $this->eventDispatcher->dispatch(WmsentryEvents::SCOPE_ALTER, new SentryScopeAlterEvent($scope, $context));
 
         return $scope;
     }
