@@ -13,6 +13,6 @@ class Error extends ErrorBase
         'debug',
         '_drupal_error_handler',
         '_drupal_exception_handler',
-        'handleError'
+        'handleError',
     ];
 }

@@ -14,7 +14,7 @@ final class WmsentryEvents
      * The event object is an instance of
      * @uses \Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent
      */
-    const BEFORE_BREADCRUMB = 'wmsentry.before_breadcrumb';
+    public const BEFORE_BREADCRUMB = 'wmsentry.before_breadcrumb';
 
     /**
      * This function can return a modified event object or nothing
@@ -24,7 +24,7 @@ final class WmsentryEvents
      * The event object is an instance of
      * @uses \Drupal\wmsentry\Event\SentryBeforeSendEvent
      */
-    const BEFORE_SEND = 'wmsentry.before_send';
+    public const BEFORE_SEND = 'wmsentry.before_send';
 
     /**
      * This function is called before the scope is added to the captured event.
@@ -34,7 +34,7 @@ final class WmsentryEvents
      * The event object is an instance of
      * @uses \Drupal\wmsentry\Event\SentryScopeAlterEvent
      */
-    const SCOPE_ALTER = 'wmsentry.scope_alter';
+    public const SCOPE_ALTER = 'wmsentry.scope_alter';
 
     /**
      * This function is called before the client is created with an options object.
@@ -43,5 +43,5 @@ final class WmsentryEvents
      * The event object is an instance of
      * @uses \Drupal\wmsentry\Event\SentryOptionsAlterEvent
      */
-    const OPTIONS_ALTER = 'wmsentry.options_alter';
+    public const OPTIONS_ALTER = 'wmsentry.options_alter';
 }

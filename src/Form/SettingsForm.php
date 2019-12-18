@@ -8,17 +8,11 @@ use Drupal\Core\Logger\RfcLogLevel;
 
 class SettingsForm extends ConfigFormBase
 {
-    /**
-     * {@inheritdoc}
-     */
     public function getFormId()
     {
         return 'wmsentry_settings';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function buildForm(array $form, FormStateInterface $form_state)
     {
         $config = $this->config('wmsentry.settings');
@@ -75,10 +69,8 @@ class SettingsForm extends ConfigFormBase
         return parent::buildForm($form, $form_state);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function submitForm(array &$form, FormStateInterface $form_state) {
+    public function submitForm(array &$form, FormStateInterface $form_state)
+    {
         $this->config('wmsentry.settings')
             ->set('dsn', $form_state->getValue('dsn'))
             ->set('release', $form_state->getValue('release'))
@@ -92,9 +84,6 @@ class SettingsForm extends ConfigFormBase
         parent::submitForm($form, $form_state);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function getEditableConfigNames()
     {
         return ['wmsentry.settings'];

@@ -10,7 +10,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\Logger\RfcLogLevel;
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\wmcustom\Entity\User\User;
 use Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent;
 use Drupal\wmsentry\Event\SentryBeforeSendEvent;
@@ -68,6 +67,40 @@ class Sentry implements LoggerInterface
          */
         $this->moduleHandler->loadInclude('wmsentry', 'module');
         set_error_handler('_wmsentry_error_handler_real');
+    }
+
+    public function onBeforeSend(Event $event): ?Event
+    {
+        /** @var SentryBeforeSendEvent $beforeSendEvent */
+        $beforeSendEvent = $this->eventDispatcher->dispatch(WmsentryEvents::BEFORE_SEND, new SentryBeforeSendEvent($event));
+
+        return $beforeSendEvent->isExcluded() ? null : $beforeSendEvent->getEvent();
+    }
+
+    public function onBeforeBreadcrumb(Breadcrumb $breadcrumb): ?Breadcrumb
+    {
+        /** @var SentryBeforeBreadcrumbEvent $beforeBreadcrumbEvent */
+        $beforeBreadcrumbEvent = $this->eventDispatcher->dispatch(WmsentryEvents::BEFORE_BREADCRUMB, new SentryBeforeBreadcrumbEvent($breadcrumb));
+
+        return $beforeBreadcrumbEvent->isExcluded() ? null : $beforeBreadcrumbEvent->getBreadcrumb();
+    }
+
+    public function log($level, $message, array $context = [])
+    {
+        if (!$this->isLogLevelIncluded($level)) {
+            return;
+        }
+
+        $scope = $this->buildScope($context);
+
+        $payload = [
+            'level' => $this->getLogLevel($level),
+            'message' => $this->formatMessage($message, $context),
+            'logger' => $context['channel'],
+            'stacktrace' => $this->buildStacktrace($context),
+        ];
+
+        $this->client->captureEvent($payload, $scope);
     }
 
     protected function getClient(): ?ClientInterface
@@ -136,7 +169,6 @@ class Sentry implements LoggerInterface
     {
         if (!empty($context['backtrace'])) {
             $backtrace = $context['backtrace'];
-
         } else {
             $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $finder = new ClassFinder();
@@ -231,42 +263,5 @@ class Sentry implements LoggerInterface
         $index = $level + 1;
 
         return !empty($this->config->get("log_levels.{$index}"));
-    }
-
-    public function onBeforeSend(Event $event): ?Event
-    {
-        /** @var SentryBeforeSendEvent $beforeSendEvent */
-        $beforeSendEvent = $this->eventDispatcher->dispatch(WmsentryEvents::BEFORE_SEND, new SentryBeforeSendEvent($event));
-
-        return $beforeSendEvent->isExcluded() ? null : $beforeSendEvent->getEvent();
-    }
-
-    public function onBeforeBreadcrumb(Breadcrumb $breadcrumb): ?Breadcrumb
-    {
-        /** @var SentryBeforeBreadcrumbEvent $beforeBreadcrumbEvent */
-        $beforeBreadcrumbEvent = $this->eventDispatcher->dispatch(WmsentryEvents::BEFORE_BREADCRUMB, new SentryBeforeBreadcrumbEvent($breadcrumb));
-
-        return $beforeBreadcrumbEvent->isExcluded() ? null : $beforeBreadcrumbEvent->getBreadcrumb();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function log($level, $message, array $context = [])
-    {
-        if (!$this->isLogLevelIncluded($level)) {
-            return;
-        }
-
-        $scope = $this->buildScope($context);
-
-        $payload = [
-            'level' => $this->getLogLevel($level),
-            'message' => $this->formatMessage($message, $context),
-            'logger' => $context['channel'],
-            'stacktrace' => $this->buildStacktrace($context),
-        ];
-
-        $this->client->captureEvent($payload, $scope);
     }
 }
