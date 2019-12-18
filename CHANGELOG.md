@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Normalize composer.json
 - Update .gitignore
+- Update README
 - Apply automatic code style fixes
 
 ## [1.3.5] - 2019-11-22
