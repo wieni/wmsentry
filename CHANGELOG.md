@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add coding standard fixers
 - Add changelog
+- Add issue & pull request templates
 
 ### Changed
 - Normalize composer.json
