@@ -10,7 +10,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\Logger\RfcLogLevel;
-use Drupal\wmcustom\Entity\User\User;
 use Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent;
 use Drupal\wmsentry\Event\SentryBeforeSendEvent;
 use Drupal\wmsentry\Event\SentryOptionsAlterEvent;
