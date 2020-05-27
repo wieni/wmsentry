@@ -10,6 +10,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\user\UserInterface;
 use Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent;
 use Drupal\wmsentry\Event\SentryBeforeSendEvent;
 use Drupal\wmsentry\Event\SentryOptionsAlterEvent;
@@ -43,7 +44,7 @@ class Sentry implements LoggerInterface
     protected $eventDispatcher;
     /** @var ModuleHandlerInterface */
     protected $moduleHandler;
-    /** @var \Drupal\Core\Entity\EntityTypeManagerInterface  */
+    /** @var EntityTypeManagerInterface */
     protected $entityTypeManager;
 
     public function __construct(
@@ -246,7 +247,7 @@ class Sentry implements LoggerInterface
             return $data;
         }
 
-        /* @var \Drupal\user\Entity\User $user */
+        /* @var UserInterface $user */
         $user = $this->entityTypeManager->getStorage('user')->load($context['uid']);
 
         if ($user) {
