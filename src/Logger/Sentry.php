@@ -21,6 +21,7 @@ use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\Serializer;
@@ -109,6 +110,7 @@ class Sentry implements LoggerInterface
             return $this->client;
         }
 
+        $integrations = [];
         $options = new Options([
             'dsn' => $this->config->get('dsn'),
             'attach_stacktrace' => true,
@@ -125,8 +127,12 @@ class Sentry implements LoggerInterface
         }
 
         if ($value = $this->config->get('excluded_exceptions')) {
-            $options->setExcludedExceptions($value);
+            $integrations[] = new IgnoreErrorsIntegration([
+                'ignore_exceptions' => $value
+            ]);
         }
+
+        $options->setIntegrations($integrations);
 
         $this->eventDispatcher->dispatch(WmsentryEvents::OPTIONS_ALTER, new SentryOptionsAlterEvent($options));
 
