@@ -4,9 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.5.0] - 2020-05-27
+### Changed
+- Increase minimum version of the SDK to 2.3.0
+
+### Fixed
+- Fix excluded exceptions option
+- Add missing drupal:user dependency
+
+## [1.4.1] - 2020-01-06
 ### Changed
 - Remove maintainers section & update security email address in README
+
+### Fixed
+- Fix error when no context is passed to the error handler
 
 ## [1.4.0] - 2019-12-18
 ### Added
