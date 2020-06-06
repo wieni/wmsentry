@@ -92,6 +92,10 @@ class Sentry implements LoggerInterface
             return;
         }
 
+        if (isset($context['%type']) && !$this->isExceptionIncluded($context['%type'])) {
+            return;
+        }
+
         $scope = $this->buildScope($context);
 
         $payload = [
@@ -110,7 +114,6 @@ class Sentry implements LoggerInterface
             return $this->client;
         }
 
-        $integrations = [];
         $options = new Options([
             'dsn' => $this->config->get('dsn'),
             'attach_stacktrace' => true,
@@ -125,14 +128,6 @@ class Sentry implements LoggerInterface
         if ($value = $this->config->get('environment')) {
             $options->setEnvironment($value);
         }
-
-        if ($value = $this->config->get('excluded_exceptions')) {
-            $integrations[] = new IgnoreErrorsIntegration([
-                'ignore_exceptions' => $value
-            ]);
-        }
-
-        $options->setIntegrations($integrations);
 
         $this->eventDispatcher->dispatch(WmsentryEvents::OPTIONS_ALTER, new SentryOptionsAlterEvent($options));
 
@@ -269,5 +264,10 @@ class Sentry implements LoggerInterface
         $index = $level + 1;
 
         return !empty($this->config->get("log_levels.{$index}"));
+    }
+
+    protected function isExceptionIncluded(string $type): bool
+    {
+        return !in_array($type, $this->config->get('excluded_exceptions'), true);
     }
 }
