@@ -23,7 +23,7 @@ whichever PSR-7 implementation and HTTP client they want to use.
 If you just want to get started quickly you should run the following command:
 
 ```bash
-composer require wieni/wmsentry php-http/curl-client guzzlehttp/psr7
+composer require wieni/wmsentry php-http/curl-client php-http/guzzle6-adapter
 ```
 For more information, please refer to the _Install_ section of the [`sentry/sentry-php`](https://github.com/getsentry/sentry-php#install) repository README.
 
