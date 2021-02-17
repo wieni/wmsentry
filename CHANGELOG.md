@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for the `in_app_include` and `in_app_exclude` options
 - Add all log messages as breadcrumbs
 - Add support for Drush errors
+- Add default excluded exceptions & tags
 
 ### Fixed
 - Replace recommended guzzlehttp/psr7 with php-http/guzzle6-adapter

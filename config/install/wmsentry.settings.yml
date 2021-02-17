@@ -11,8 +11,18 @@ log_levels:
   7: 0
   8: 0
 include_stacktrace_func_args: false
-excluded_exceptions: {  }
-excluded_tags: {  }
+excluded_exceptions:
+  - Drupal\Core\Queue\SuspendQueueException
+  - Symfony\Component\Routing\Exception\MethodNotAllowedException
+  - Symfony\Component\HttpFoundation\Exception\RequestExceptionInterface
+  - Symfony\Component\HttpKernel\Exception\HttpException
+excluded_tags:
+  -
+    tag: channel
+    value: 'page not found'
+  -
+    tag: channel
+    value: 'access denied'
 in_app_include: {  }
 in_app_exclude:
   - ../vendor
