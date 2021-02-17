@@ -172,8 +172,8 @@ class Sentry implements LoggerInterface
             'attach_stacktrace' => true,
             'before_send' => [$this, 'onBeforeSend'],
             'before_breadcrumb' => [$this, 'onBeforeBreadcrumb'],
-            'in_app_exclude' => $this->normalizePaths($this->config->get('in_app_exclude')),
-            'in_app_include' => $this->normalizePaths($this->config->get('in_app_include')),
+            'in_app_exclude' => $this->normalizePaths($this->config->get('in_app_exclude') ?? []),
+            'in_app_include' => $this->normalizePaths($this->config->get('in_app_include') ?? []),
         ]);
 
         if ($value = $this->config->get('release')) {
