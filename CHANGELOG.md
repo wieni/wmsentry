@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix error during module install
+- Fix Drush integration
 - Replace recommended php-http/curl-client with nyholm/psr7
 
 ## [1.6.0] - 2021-02-17

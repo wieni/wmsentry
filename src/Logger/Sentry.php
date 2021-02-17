@@ -79,7 +79,7 @@ class Sentry implements LoggerInterface
         set_error_handler('_wmsentry_error_handler_real');
 
         // Add Drush console error event listener.
-        if (class_exists(Drush::class) && method_exists(Drush::class, 'service')) {
+        if (class_exists(Drush::class) && method_exists(Drush::class, 'service') && Drush::hasService('eventDispatcher')) {
             Drush::service('eventDispatcher')->addListener(ConsoleEvents::ERROR, [$this, 'logDrush']);
         }
     }
