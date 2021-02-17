@@ -21,14 +21,17 @@ use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
-use Sentry\Integration\IgnoreErrorsIntegration;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use function Sentry\addBreadcrumb;
+use function Sentry\captureEvent;
+use function Sentry\withScope;
 
 class Sentry implements LoggerInterface
 {
@@ -62,6 +65,8 @@ class Sentry implements LoggerInterface
         $this->entityTypeManager = $entityTypeManager;
         $this->client = $this->getClient();
 
+        SentrySdk::getCurrentHub()->bindClient($this->client);
+
         /**
          * Replace the Drupal error handler
          * @see _wmsentry_error_handler_real
@@ -88,6 +93,21 @@ class Sentry implements LoggerInterface
 
     public function log($level, $message, array $context = [])
     {
+        $this->logException($level, $message, $context);
+        $this->logBreadcrumb($level, $message, $context);
+    }
+
+    protected function logBreadcrumb($level, $message, array $context): void
+    {
+        addBreadcrumb(Breadcrumb::fromArray([
+            'level' => $this->getLogLevel($level),
+            'category' => $context['channel'],
+            'message' => $this->formatMessage($message, $context),
+        ]));
+    }
+
+    protected function logException($level, $message, array $context): void
+    {
         if (!$this->isLogLevelIncluded($level)) {
             return;
         }
@@ -96,16 +116,35 @@ class Sentry implements LoggerInterface
             return;
         }
 
-        $scope = $this->buildScope($context);
+        withScope(function (Scope $scope) use ($level, $message, $context): void {
+            $payload = [
+                'level' => $this->getLogLevel($level),
+                'message' => $this->formatMessage($message, $context),
+                'logger' => $context['channel'],
+                'stacktrace' => $this->buildStacktrace($context),
+            ];
 
-        $payload = [
-            'level' => $this->getLogLevel($level),
-            'message' => $this->formatMessage($message, $context),
-            'logger' => $context['channel'],
-            'stacktrace' => $this->buildStacktrace($context),
-        ];
+            foreach (['channel', '%type'] as $key) {
+                if (isset($context[$key])) {
+                    $scope->setTag(ltrim($key, '%@'), $context[$key]);
+                }
+            }
 
-        $this->client->captureEvent($payload, $scope);
+            foreach (['link', 'referer', 'request_uri'] as $key) {
+                if (!empty($context[$key])) {
+                    $scope->setExtra($key, $context[$key]);
+                }
+            }
+
+            $scope->setUser($this->getUserData($context));
+
+            $this->eventDispatcher->dispatch(
+                WmsentryEvents::SCOPE_ALTER,
+                new SentryScopeAlterEvent($scope, $context)
+            );
+
+            captureEvent($payload);
+        });
     }
 
     protected function getClient(): ?ClientInterface
@@ -214,29 +253,6 @@ class Sentry implements LoggerInterface
             },
             $stacktrace
         );
-    }
-
-    protected function buildScope(array $context): Scope
-    {
-        $scope = new Scope;
-
-        foreach (['channel', '%type'] as $key) {
-            if (isset($context[$key])) {
-                $scope->setTag(ltrim($key, '%@'), $context[$key]);
-            }
-        }
-
-        foreach (['link', 'referer', 'request_uri'] as $key) {
-            if (!empty($context[$key])) {
-                $scope->setExtra($key, $context[$key]);
-            }
-        }
-
-        $scope->setUser($this->getUserData($context));
-
-        $this->eventDispatcher->dispatch(WmsentryEvents::SCOPE_ALTER, new SentryScopeAlterEvent($scope, $context));
-
-        return $scope;
     }
 
     protected function getUserData(array $context): array
