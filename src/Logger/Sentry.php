@@ -27,6 +27,7 @@ use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use function Sentry\addBreadcrumb;
@@ -217,12 +218,18 @@ class Sentry implements LoggerInterface
 
             $toIgnore = array_map(
                 function (string $className) use ($finder) {
+                    if (file_exists($className)) {
+                        return realpath($className);
+                    }
+
                     return realpath($finder->findFile($className));
                 },
                 [
                     self::class,
                     \Drupal\Core\Logger\LoggerChannel::class,
                     \Psr\Log\LoggerTrait::class,
+                    \Sentry\State\Hub::class,
+                    DRUPAL_ROOT . '/../vendor/sentry/sentry/src/functions.php',
                 ]
             );
 
