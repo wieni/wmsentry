@@ -18,7 +18,10 @@ use Drupal\wmsentry\Event\SentryScopeAlterEvent;
 use Drupal\wmsentry\WmsentryEvents;
 use Drush\Drush;
 use Psr\Log\LoggerInterface;
+use function Sentry\addBreadcrumb;
 use Sentry\Breadcrumb;
+use function Sentry\captureEvent;
+use function Sentry\captureException;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -29,13 +32,10 @@ use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
+use function Sentry\withScope;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use function Sentry\addBreadcrumb;
-use function Sentry\captureEvent;
-use function Sentry\captureException;
-use function Sentry\withScope;
 
 class Sentry implements LoggerInterface
 {
@@ -100,7 +100,7 @@ class Sentry implements LoggerInterface
         return $beforeBreadcrumbEvent->isExcluded() ? null : $beforeBreadcrumbEvent->getBreadcrumb();
     }
 
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
         $this->logException($level, $message, $context);
         $this->logBreadcrumb($level, $message, $context);
@@ -259,7 +259,7 @@ class Sentry implements LoggerInterface
 
         return array_reduce(
             $backtrace,
-            function (Stacktrace $stacktrace, array $frame) {
+            function (Stacktrace $stacktrace, array $frame): Stacktrace {
                 $file = $frame['file'] ?? '[internal]';
                 $line = $frame['line'] ?? 0;
 
@@ -286,7 +286,7 @@ class Sentry implements LoggerInterface
             return $data;
         }
 
-        /* @var UserInterface $user */
+        /** @var UserInterface $user */
         $user = $this->entityTypeManager->getStorage('user')->load($context['uid']);
 
         if ($user) {
@@ -312,7 +312,7 @@ class Sentry implements LoggerInterface
     protected function normalizePaths(array $paths): array
     {
         return array_map(
-            static function (string $path) {
+            static function (string $path): string {
                 return DRUPAL_ROOT . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
             },
             $paths

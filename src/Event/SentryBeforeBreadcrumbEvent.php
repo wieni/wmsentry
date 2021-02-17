@@ -27,7 +27,7 @@ class SentryBeforeBreadcrumbEvent extends Event
         return $this->excluded;
     }
 
-    public function setExcluded(bool $excluded): SentryBeforeBreadcrumbEvent
+    public function setExcluded(bool $excluded): self
     {
         $this->excluded = $excluded;
 

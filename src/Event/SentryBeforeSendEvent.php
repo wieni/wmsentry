@@ -27,7 +27,7 @@ class SentryBeforeSendEvent extends EventBase
         return $this->excluded;
     }
 
-    public function setExcluded(bool $excluded = true): SentryBeforeSendEvent
+    public function setExcluded(bool $excluded = true): self
     {
         $this->excluded = $excluded;
 

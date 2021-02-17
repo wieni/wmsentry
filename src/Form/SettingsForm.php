@@ -83,7 +83,7 @@ class SettingsForm extends ConfigFormBase
         return parent::buildForm($form, $form_state);
     }
 
-    public function submitForm(array &$form, FormStateInterface $form_state)
+    public function submitForm(array &$form, FormStateInterface $form_state): void
     {
         $this->config('wmsentry.settings')
             ->set('dsn', $form_state->getValue('dsn'))
@@ -136,14 +136,14 @@ class SettingsForm extends ConfigFormBase
     {
         if (is_string($value)) {
             $lines = array_map('trim', explode(PHP_EOL, $value));
-            return array_map(function (string $line) {
+            return array_map(function (string $line): array {
                 [$tag, $value] = array_map('trim', explode(':', $line));
                 return compact('tag', 'value');
             }, $lines);
         }
 
         if (is_array($value)) {
-            $lines = array_map(function (array $line) {
+            $lines = array_map(function (array $line): string {
                 return "{$line['tag']}: {$line['value']}";
             }, $value);
             return implode(PHP_EOL, $lines);
