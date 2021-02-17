@@ -16,6 +16,7 @@ use Drupal\wmsentry\Event\SentryBeforeSendEvent;
 use Drupal\wmsentry\Event\SentryOptionsAlterEvent;
 use Drupal\wmsentry\Event\SentryScopeAlterEvent;
 use Drupal\wmsentry\WmsentryEvents;
+use Drush\Drush;
 use Psr\Log\LoggerInterface;
 use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
@@ -27,11 +28,13 @@ use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\Console\Event\ConsoleErrorEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureEvent;
+use function Sentry\captureException;
 use function Sentry\withScope;
 
 class Sentry implements LoggerInterface
@@ -74,6 +77,11 @@ class Sentry implements LoggerInterface
          */
         $this->moduleHandler->loadInclude('wmsentry', 'module');
         set_error_handler('_wmsentry_error_handler_real');
+
+        // Add Drush console error event listener.
+        if (class_exists(Drush::class) && method_exists(Drush::class, 'service')) {
+            Drush::service('eventDispatcher')->addListener(ConsoleEvents::ERROR, [$this, 'logDrush']);
+        }
     }
 
     public function onBeforeSend(Event $event): ?Event
@@ -96,6 +104,11 @@ class Sentry implements LoggerInterface
     {
         $this->logException($level, $message, $context);
         $this->logBreadcrumb($level, $message, $context);
+    }
+
+    public function logDrush(ConsoleErrorEvent $event): void
+    {
+        captureException($event->getError());
     }
 
     protected function logBreadcrumb($level, $message, array $context): void
