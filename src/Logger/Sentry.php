@@ -119,6 +119,8 @@ class Sentry implements LoggerInterface
             'attach_stacktrace' => true,
             'before_send' => [$this, 'onBeforeSend'],
             'before_breadcrumb' => [$this, 'onBeforeBreadcrumb'],
+            'in_app_exclude' => $this->normalizePaths($this->config->get('in_app_exclude')),
+            'in_app_include' => $this->normalizePaths($this->config->get('in_app_include')),
         ]);
 
         if ($value = $this->config->get('release')) {
@@ -269,5 +271,15 @@ class Sentry implements LoggerInterface
     protected function isExceptionIncluded(string $type): bool
     {
         return !in_array($type, $this->config->get('excluded_exceptions'), true);
+    }
+
+    protected function normalizePaths(array $paths): array
+    {
+        return array_map(
+            static function (string $path) {
+                return DRUPAL_ROOT . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+            },
+            $paths
+        );
     }
 }

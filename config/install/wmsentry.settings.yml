@@ -13,3 +13,11 @@ log_levels:
 include_stacktrace_func_args: false
 excluded_exceptions: {  }
 excluded_tags: {  }
+in_app_include: {  }
+in_app_exclude:
+  - ../vendor
+  - core
+  - modules/contrib
+  - themes/contrib
+  - profiles/contrib
+  - libraries

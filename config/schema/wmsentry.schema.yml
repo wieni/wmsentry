@@ -58,3 +58,15 @@ wmsentry.settings:
                 8:
                     type: integer
                     label: 'Debug'
+        in_app_include:
+            type: sequence
+            label: 'A list of string prefixes of module names that belong to the app. This option takes precedence over in_app_exclude.'
+            sequence:
+                type: string
+                label: 'Path prefix'
+        in_app_exclude:
+            type: sequence
+            label: 'A list of string prefixes of module names that do not belong to the app, but rather to third-party packages. Modules considered not part of the app will be hidden from stack traces by default. This option can be overridden using in_app_include.'
+            sequence:
+                type: string
+                label: 'Path prefix'

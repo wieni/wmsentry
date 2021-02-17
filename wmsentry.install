@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * Set default values for the in_app_exclude option
+ */
+function wmsentry_update_8001(): void
+{
+    $config = \Drupal::configFactory()
+        ->getEditable('wmsentry.settings');
+
+    if ($config->get('in_app_exclude')) {
+        return;
+    }
+
+    $config->set('in_app_exclude', [
+        '../vendor',
+        'core',
+        'modules/contrib',
+        'themes/contrib',
+        'profiles/contrib',
+        'libraries',
+    ]);
+    $config->save();
+}

@@ -56,7 +56,7 @@ class SettingsForm extends ConfigFormBase
             '#type' => 'textarea',
             '#title' => 'Excluded exceptions',
             '#description' => 'Sometimes you may want to skip capturing certain exceptions. This option sets the FQCN of the classes of the exceptions that you don’t want to capture. The check is done using the instanceof operator against each item of the array and if at least one of them passes the event will be discarded.',
-            '#default_value' => $this->transformExcludedExceptions($config->get('excluded_exceptions')),
+            '#default_value' => $this->transformStringList($config->get('excluded_exceptions')),
         ];
 
         $form['excluded_tags'] = [
@@ -64,6 +64,20 @@ class SettingsForm extends ConfigFormBase
             '#title' => 'Excluded tags',
             '#description' => 'A list of tags that - if present on an event - will cause the captured exception to be skipped. Tags and their values should be seperated with a colon.',
             '#default_value' => $this->transformExcludedTags($config->get('excluded_tags')),
+        ];
+
+        $form['in_app_include'] = [
+            '#type' => 'textarea',
+            '#title' => 'Included file paths',
+            '#description' => 'A list of path prefixes that belong to the app. Paths are relative to the Drupal root. This option takes precedence over in_app_exclude.',
+            '#default_value' => $this->transformStringList($config->get('in_app_include')),
+        ];
+
+        $form['in_app_exclude'] = [
+            '#type' => 'textarea',
+            '#title' => 'Excluded file paths',
+            '#description' => 'A list of path prefixes that do not belong to the app, but rather to third-party packages. Paths are relative to the Drupal root. Modules considered not part of the app will be hidden from stack traces by default. This option can be overridden using in_app_include.',
+            '#default_value' => $this->transformStringList($config->get('in_app_exclude')),
         ];
 
         return parent::buildForm($form, $form_state);
@@ -77,8 +91,10 @@ class SettingsForm extends ConfigFormBase
             ->set('environment', $form_state->getValue('environment'))
             ->set('log_levels', $form_state->getValue('log_levels'))
             ->set('include_stacktrace_func_args', $form_state->getValue('include_stacktrace_func_args'))
-            ->set('excluded_exceptions', $this->transformExcludedExceptions($form_state->getValue('excluded_exceptions')))
+            ->set('excluded_exceptions', $this->transformStringList($form_state->getValue('excluded_exceptions')))
             ->set('excluded_tags', $this->transformExcludedTags($form_state->getValue('excluded_tags')))
+            ->set('in_app_include', $this->transformStringList($form_state->getValue('in_app_include')))
+            ->set('in_app_exclude', $this->transformStringList($form_state->getValue('in_app_exclude')))
             ->save();
 
         parent::submitForm($form, $form_state);
@@ -100,10 +116,13 @@ class SettingsForm extends ConfigFormBase
         return $options;
     }
 
-    protected function transformExcludedExceptions($value)
+    protected function transformStringList($value)
     {
         if (is_string($value)) {
-            return array_map('trim', explode(PHP_EOL, $value));
+            $values = explode(PHP_EOL, $value);
+            $values = array_map('trim', $values);
+
+            return array_filter($values);
         }
 
         if (is_array($value)) {
