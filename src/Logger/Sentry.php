@@ -18,6 +18,9 @@ use Drupal\wmsentry\Event\SentryScopeAlterEvent;
 use Drupal\wmsentry\WmsentryEvents;
 use Drush\Drush;
 use Psr\Log\LoggerInterface;
+use Sentry\EventHint;
+use Sentry\StacktraceBuilder;
+use Sentry\UserDataBag;
 use function Sentry\addBreadcrumb;
 use Sentry\Breadcrumb;
 use function Sentry\captureEvent;
@@ -28,7 +31,6 @@ use Sentry\Event;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Serializer\RepresentationSerializer;
-use Sentry\Serializer\Serializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
@@ -48,6 +50,8 @@ class Sentry implements LoggerInterface
     protected $parser;
     /** @var ClientInterface */
     protected $client;
+    /** @var StacktraceBuilder */
+    protected $stackTraceBuilder;
     /** @var EventDispatcherInterface */
     protected $eventDispatcher;
     /** @var ModuleHandlerInterface */
@@ -68,6 +72,10 @@ class Sentry implements LoggerInterface
         $this->moduleHandler = $moduleHandler;
         $this->entityTypeManager = $entityTypeManager;
         $this->client = $this->getClient();
+        $this->stackTraceBuilder = new StacktraceBuilder(
+            $this->client->getOptions(),
+            new RepresentationSerializer($this->client->getOptions())
+        );
 
         SentrySdk::getCurrentHub()->bindClient($this->client);
 
@@ -87,7 +95,10 @@ class Sentry implements LoggerInterface
     public function onBeforeSend(Event $event): ?Event
     {
         /** @var SentryBeforeSendEvent $beforeSendEvent */
-        $beforeSendEvent = $this->eventDispatcher->dispatch(WmsentryEvents::BEFORE_SEND, new SentryBeforeSendEvent($event));
+        $beforeSendEvent = $this->eventDispatcher->dispatch(
+            WmsentryEvents::BEFORE_SEND,
+            new SentryBeforeSendEvent($event)
+        );
 
         return $beforeSendEvent->isExcluded() ? null : $beforeSendEvent->getEvent();
     }
@@ -95,7 +106,10 @@ class Sentry implements LoggerInterface
     public function onBeforeBreadcrumb(Breadcrumb $breadcrumb): ?Breadcrumb
     {
         /** @var SentryBeforeBreadcrumbEvent $beforeBreadcrumbEvent */
-        $beforeBreadcrumbEvent = $this->eventDispatcher->dispatch(WmsentryEvents::BEFORE_BREADCRUMB, new SentryBeforeBreadcrumbEvent($breadcrumb));
+        $beforeBreadcrumbEvent = $this->eventDispatcher->dispatch(
+            WmsentryEvents::BEFORE_BREADCRUMB,
+            new SentryBeforeBreadcrumbEvent($breadcrumb)
+        );
 
         return $beforeBreadcrumbEvent->isExcluded() ? null : $beforeBreadcrumbEvent->getBreadcrumb();
     }
@@ -114,7 +128,7 @@ class Sentry implements LoggerInterface
     protected function logBreadcrumb($level, $message, array $context): void
     {
         addBreadcrumb(Breadcrumb::fromArray([
-            'level' => $this->getLogLevel($level),
+            'level' => (string) $this->getLogLevel($level),
             'category' => $context['channel'],
             'message' => $this->formatMessage($message, $context),
         ]));
@@ -130,34 +144,59 @@ class Sentry implements LoggerInterface
             return;
         }
 
-        withScope(function (Scope $scope) use ($level, $message, $context): void {
-            $payload = [
-                'level' => $this->getLogLevel($level),
-                'message' => $this->formatMessage($message, $context),
-                'logger' => $context['channel'],
-                'stacktrace' => $this->buildStacktrace($context),
-            ];
+        $event = Event::createEvent();
+        $event->setLevel($this->getLogLevel($level));
+        $event->setMessage($this->formatMessage($message, $context));
+        $event->setLogger($context['channel']);
+        $event->setStacktrace($this->buildStacktrace($context));
+        $event->setUser($this->getUserData($context));
 
-            foreach (['channel', '%type'] as $key) {
+        $event->setTags(array_reduce(
+            ['channel', '%type'],
+            static function (array $tags, string $key) {
                 if (isset($context[$key])) {
-                    $scope->setTag(ltrim($key, '%@'), $context[$key]);
+                    $tags[ltrim($key, '%@')] = $context[$key];
                 }
-            }
 
-            foreach (['link', 'referer', 'request_uri'] as $key) {
-                if (!empty($context[$key])) {
-                    $scope->setExtra($key, $context[$key]);
+                return $tags;
+            },
+            []
+        ));
+
+        $event->setExtra(array_reduce(
+            ['link', 'referer', 'request_uri'],
+            static function (array $tags, string $key) {
+                if (isset($context[$key])) {
+                    $tags[$key] = $context[$key];
                 }
-            }
 
-            $scope->setUser($this->getUserData($context));
+                return $tags;
+            },
+            []
+        ));
 
+        $eventHint = new EventHint();
+        $eventHint->extra = [
+            'level' => $level,
+            'message' => $message,
+            'context' => $context,
+        ];
+
+        if ($stacktrace = $event->getStacktrace()) {
+            $eventHint->stacktrace = $stacktrace;
+        }
+
+        if (isset($context['exception']) && $context['exception'] instanceof \Throwable) {
+            $eventHint->exception = $context['exception'];
+        }
+
+        withScope(function (Scope $scope) use ($event, $eventHint, $context): void {
             $this->eventDispatcher->dispatch(
                 WmsentryEvents::SCOPE_ALTER,
                 new SentryScopeAlterEvent($scope, $context)
             );
 
-            captureEvent($payload);
+            captureEvent($event, $eventHint);
         });
     }
 
@@ -184,12 +223,15 @@ class Sentry implements LoggerInterface
             $options->setEnvironment($value);
         }
 
-        $this->eventDispatcher->dispatch(WmsentryEvents::OPTIONS_ALTER, new SentryOptionsAlterEvent($options));
+        $this->eventDispatcher->dispatch(
+            WmsentryEvents::OPTIONS_ALTER,
+            new SentryOptionsAlterEvent($options)
+        );
 
         return $this->client = (new ClientBuilder($options))->getClient();
     }
 
-    protected function getLogLevel(int $rfc): ?string
+    protected function getLogLevel(int $rfc): ?Severity
     {
         $levels = [
             RfcLogLevel::EMERGENCY => Severity::FATAL,
@@ -202,7 +244,11 @@ class Sentry implements LoggerInterface
             RfcLogLevel::DEBUG => Severity::DEBUG,
         ];
 
-        return $levels[$rfc] ?? null;
+        if (isset($levels[$rfc])) {
+            return new Severity($levels[$rfc]);
+        }
+
+        return null;
     }
 
     protected function formatMessage(string $message, array $context): string
@@ -223,14 +269,21 @@ class Sentry implements LoggerInterface
 
     protected function buildStacktrace(array $context): Stacktrace
     {
+        $includeArgs = $this->config->get('include_stacktrace_func_args');
+
         if (!empty($context['backtrace'])) {
             $backtrace = $context['backtrace'];
+            if (!$includeArgs) {
+                foreach ($backtrace as &$frame) {
+                    unset($frame['args']);
+                }
+            }
         } else {
-            $backtrace = \debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $backtrace = \debug_backtrace($includeArgs ? 0 : DEBUG_BACKTRACE_IGNORE_ARGS);
             $finder = new ClassFinder();
 
             $toIgnore = array_map(
-                function (string $className) use ($finder) {
+                static function (string $className) use ($finder) {
                     if (file_exists($className)) {
                         return realpath($className);
                     }
@@ -251,47 +304,28 @@ class Sentry implements LoggerInterface
             }
         }
 
-        $stacktrace = new Stacktrace(
-            $this->client->getOptions(),
-            new Serializer($this->client->getOptions()),
-            new RepresentationSerializer($this->client->getOptions())
-        );
+        $stacktrace = $this->stackTraceBuilder->buildFromBacktrace($backtrace, '', 0);
+        $stacktrace->removeFrame(count($stacktrace->getFrames()) - 1);
 
-        return array_reduce(
-            $backtrace,
-            function (Stacktrace $stacktrace, array $frame): Stacktrace {
-                $file = $frame['file'] ?? '[internal]';
-                $line = $frame['line'] ?? 0;
-
-                if (!$this->config->get('include_stacktrace_func_args')) {
-                    $frame['args'] = [];
-                }
-
-                $stacktrace->addFrame($file, $line, $frame);
-
-                return $stacktrace;
-            },
-            $stacktrace
-        );
+        return $stacktrace;
     }
 
-    protected function getUserData(array $context): array
+    protected function getUserData(array $context): UserDataBag
     {
-        $data = [
-            'id' => (string) ($context['uid'] ?? '0'),
-            'ip_address' => $context['ip'],
-        ];
+        $data = new UserDataBag();
+        $data->setId((string) ($context['uid'] ?? '0'));
+        $data->setIpAddress($context['ip']);
 
-        if (!isset($context['uid'])) {
-            return $data;
-        }
+        if ($uid = $data->getId()) {
+            /** @var UserInterface $user */
+            $user = $this->entityTypeManager
+                ->getStorage('user')
+                ->load($uid);
 
-        /** @var UserInterface $user */
-        $user = $this->entityTypeManager->getStorage('user')->load($context['uid']);
-
-        if ($user) {
-            $data['username'] = $user->getDisplayName();
-            $data['email'] = $user->getEmail();
+            if ($user) {
+                $data->setUsername($user->getDisplayName());
+                $data->setEmail($user->getEmail());
+            }
         }
 
         return $data;

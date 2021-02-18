@@ -46,26 +46,37 @@ class ExcludedTagsSubscriber implements EventSubscriberInterface
         }
     }
 
-    protected function getAllTags(Event $event)
+    protected function getAllTags(Event $event): array
     {
+        $tags = [
+            'environment' => $event->getEnvironment(),
+            'level' => (string) $event->getLevel(),
+            'logger' => $event->getLogger(),
+            'server_name' => $event->getServerName(),
+        ];
+
+        if ($os = $event->getOsContext()) {
+            $tags['os.name'] = $os->getName();
+            $tags['os.version'] = $os->getVersion();
+            $tags['os.build'] = $os->getBuild();
+        }
+
+        if ($runtime = $event->getRuntimeContext()) {
+            $tags['runtime.name'] = $runtime->getName();
+            $tags['runtime.version'] = $runtime->getVersion();
+        }
+
+        if ($user = $event->getUser()) {
+            $tags['user.id'] = $user->getId();
+            $tags['user.ip_address'] = $user->getIpAddress();
+            $tags['user.username'] = $user->getUsername();
+            $tags['user.email'] = $user->getEmail();
+        }
+
         return array_merge(
-            $event->getTagsContext()->toArray(),
-            $event->getExtraContext()->toArray(),
-            [
-                'environment' => $event->getEnvironment(),
-                'level' => (string) $event->getLevel(),
-                'logger' => $event->getLogger(),
-                'server_name' => $event->getServerName(),
-                'os.name' => $event->getServerOsContext()->getName(),
-                'os.version' => $event->getServerOsContext()->getVersion(),
-                'os.build' => $event->getServerOsContext()->getBuild(),
-                'runtime.name' => $event->getRuntimeContext()->getName(),
-                'runtime.version' => $event->getRuntimeContext()->getVersion(),
-                'user.id' => $event->getUserContext()->getId(),
-                'user.ip_address' => $event->getUserContext()->getIpAddress(),
-                'user.username' => $event->getUserContext()->getUsername(),
-                'user.email' => $event->getUserContext()->getEmail(),
-            ]
+            $event->getTags(),
+            $event->getExtra(),
+            $tags
         );
     }
 }
