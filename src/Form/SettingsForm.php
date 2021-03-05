@@ -50,6 +50,7 @@ class SettingsForm extends ConfigFormBase
             $setUrl = Url::fromRoute('wmsentry.set_release')->toString();
             $unsetUrl = Url::fromRoute('wmsentry.unset_release', ['destination' => $destination])->toString();
 
+            $form['release']['#default_value'] = $release;
             $form['release']['#disabled'] = true;
             $form['release']['#description'] .= sprintf(' <br><b>This value is overridden by the release set 
                 using the <code>%s</code> endpoint. <a href="%s">Remove the override</a>.</b>', $setUrl, $unsetUrl);
