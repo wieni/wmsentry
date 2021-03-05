@@ -5,9 +5,23 @@ namespace Drupal\wmsentry\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\State\State;
+use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SettingsForm extends ConfigFormBase
 {
+    /** @var State */
+    protected $state;
+
+    public static function create(ContainerInterface $container)
+    {
+        $instance = parent::create($container);
+        $instance->state = $container->get('state');
+
+        return $instance;
+    }
+
     public function getFormId()
     {
         return 'wmsentry_settings';
@@ -30,6 +44,16 @@ class SettingsForm extends ConfigFormBase
             '#description' => 'A string representing the version of your code that is deployed to an environment.',
             '#default_value' => $config->get('release'),
         ];
+
+        if ($release = $this->state->get('wmsentry.release')) {
+            $destination = Url::fromRoute('<current>')->toString();
+            $setUrl = Url::fromRoute('wmsentry.set_release')->toString();
+            $unsetUrl = Url::fromRoute('wmsentry.unset_release', ['destination' => $destination])->toString();
+
+            $form['release']['#disabled'] = true;
+            $form['release']['#description'] .= sprintf(' <br><b>This value is overridden by the release set 
+                using the <code>%s</code> endpoint. <a href="%s">Remove the override</a>.</b>', $setUrl, $unsetUrl);
+        }
 
         $form['environment'] = [
             '#type' => 'textfield',

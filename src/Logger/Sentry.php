@@ -10,6 +10,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LogMessageParserInterface;
 use Drupal\Core\Logger\RfcLoggerTrait;
 use Drupal\Core\Logger\RfcLogLevel;
+use Drupal\Core\State\StateInterface;
 use Drupal\user\UserInterface;
 use Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent;
 use Drupal\wmsentry\Event\SentryBeforeSendEvent;
@@ -50,6 +51,8 @@ class Sentry implements LoggerInterface
     protected $parser;
     /** @var ClientInterface */
     protected $client;
+    /** @var StateInterface */
+    protected $state;
     /** @var StacktraceBuilder */
     protected $stackTraceBuilder;
     /** @var EventDispatcherInterface */
@@ -62,12 +65,14 @@ class Sentry implements LoggerInterface
     public function __construct(
         ConfigFactoryInterface $config,
         LogMessageParserInterface $parser,
+        StateInterface $state,
         EventDispatcherInterface $eventDispatcher,
         ModuleHandlerInterface $moduleHandler,
         EntityTypeManagerInterface $entityTypeManager
     ) {
         $this->config = $config->get('wmsentry.settings');
         $this->parser = $parser;
+        $this->state = $state;
         $this->eventDispatcher = $eventDispatcher;
         $this->moduleHandler = $moduleHandler;
         $this->entityTypeManager = $entityTypeManager;
@@ -215,7 +220,7 @@ class Sentry implements LoggerInterface
             'in_app_include' => $this->normalizePaths($this->config->get('in_app_include') ?? []),
         ]);
 
-        if ($value = $this->config->get('release')) {
+        if ($value = $this->getRelease()) {
             $options->setRelease($value);
         }
 
@@ -249,6 +254,15 @@ class Sentry implements LoggerInterface
         }
 
         return null;
+    }
+
+    protected function getRelease(): ?string
+    {
+        if ($override = $this->state->get('wmsentry.release')) {
+            return $override;
+        }
+
+        return $this->config->get('release');
     }
 
     protected function formatMessage(string $message, array $context): string

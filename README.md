@@ -68,7 +68,18 @@ fingerprints etc.
 This function is called before the client is created with an options
 object. The options object is a configuration container for the Sentry
 client.
-     
+
+### Setting the release ID through an HTTP endpoint
+This module provides an HTTP endpoint that can be used to set the Sentry release ID without being logged in. This can 
+be useful when creating a new Sentry release through the API, eg. in a CI pipeline.
+
+The endpoint is `/sentry/set-release` and is secured in the same way as the `core/rebuild.php` script (see 
+[documentation](https://www.drupal.org/node/2153725)). The release ID can be passed using the `release` query parameter. 
+Here's an example call:
+```
+/sentry/set-release?release=exampleproject@62d50f53&timestamp=1614934032&token=XXE6H4wwVC6x5I6QnTPFTj-hSksNfgUpndv9X-3lC7Y
+```
+
 ## Changelog
 All notable changes to this project will be documented in the
 [CHANGELOG](CHANGELOG.md) file.
@@ -79,5 +90,5 @@ If you discover any security-related issues, please email
 tracker.
 
 ## License
-Distributed under the MIT License. See the [LICENSE](LICENSE.md) file
+Distributed under the MIT License. See the [LICENSE](LICENSE) file
 for more information.

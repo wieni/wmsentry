@@ -5,3 +5,17 @@ wmsentry.settings:
         _title: Sentry
     requirements:
         _permission: 'administer wmsentry settings'
+
+wmsentry.set_release:
+    path: /sentry/set-release
+    defaults:
+        _controller: Drupal\wmsentry\Controller\SetReleaseController::set
+    requirements:
+        _access: 'TRUE'
+
+wmsentry.unset_release:
+    path: /sentry/unset-release
+    defaults:
+        _controller: Drupal\wmsentry\Controller\SetReleaseController::unset
+    requirements:
+        _permission: 'administer wmsentry settings'

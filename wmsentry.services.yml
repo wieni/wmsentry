@@ -4,6 +4,7 @@ services:
         arguments:
             - '@config.factory'
             - '@logger.log_message_parser'
+            - '@state'
             - '@event_dispatcher'
             - '@module_handler'
             - '@entity_type.manager'
