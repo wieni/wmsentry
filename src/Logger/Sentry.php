@@ -354,7 +354,13 @@ class Sentry implements LoggerInterface
 
     protected function isExceptionIncluded(string $type): bool
     {
-        return !in_array($type, $this->config->get('excluded_exceptions'), true);
+        foreach ($this->config->get('excluded_exceptions') as $excludedClass) {
+            if (is_a($type, $excludedClass, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected function normalizePaths(array $paths): array
