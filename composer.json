@@ -15,6 +15,7 @@
         "sentry/sentry": "^3.1.1"
     },
     "require-dev": {
+        "composer-runtime-api": "^2.0",
         "ergebnis/composer-normalize": "^2.0",
         "wieni/wmcodestyle": "^1.3"
     },
