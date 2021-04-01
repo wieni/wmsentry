@@ -158,7 +158,7 @@ class Sentry implements LoggerInterface
 
         $event->setTags(array_reduce(
             ['channel', '%type'],
-            static function (array $tags, string $key) {
+            static function (array $tags, string $key) use ($context) {
                 if (isset($context[$key])) {
                     $tags[ltrim($key, '%@')] = $context[$key];
                 }
