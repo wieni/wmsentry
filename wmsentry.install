@@ -22,3 +22,26 @@ function wmsentry_update_8001(): void
     ]);
     $config->save();
 }
+
+/**
+ * Rename excluded 'channel' tags to 'logger'
+ */
+function wmsentry_update_8002(): void
+{
+    $config = \Drupal::configFactory()
+        ->getEditable('wmsentry.settings');
+
+    if (!$excludedTags = $config->get('excluded_tags')) {
+        return;
+    }
+
+    foreach ($excludedTags as &$excludedTag) {
+        if ($excludedTag['tag'] === 'channel') {
+            $excludedTag['tag'] = 'logger';
+        }
+    }
+
+    $config->set('excluded_tags', $excludedTags);
+    $config->save();
+}
+
