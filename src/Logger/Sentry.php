@@ -20,6 +20,10 @@ use Drupal\wmsentry\WmsentryEvents;
 use Drush\Drush;
 use Psr\Log\LoggerInterface;
 use Sentry\EventHint;
+use Sentry\Integration\EnvironmentIntegration;
+use Sentry\Integration\FrameContextifierIntegration;
+use Sentry\Integration\RequestIntegration;
+use Sentry\Integration\TransactionIntegration;
 use Sentry\StacktraceBuilder;
 use Sentry\UserDataBag;
 use function Sentry\addBreadcrumb;
@@ -218,6 +222,13 @@ class Sentry implements LoggerInterface
             'before_breadcrumb' => [$this, 'onBeforeBreadcrumb'],
             'in_app_exclude' => $this->normalizePaths($this->config->get('in_app_exclude') ?? []),
             'in_app_include' => $this->normalizePaths($this->config->get('in_app_include') ?? []),
+            'default_integrations' => false,
+            'integrations' => [
+                new RequestIntegration(),
+                new TransactionIntegration(),
+                new FrameContextifierIntegration(),
+                new EnvironmentIntegration(),
+            ],
         ]);
 
         if ($value = $this->getRelease()) {
