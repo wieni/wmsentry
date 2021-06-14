@@ -339,7 +339,11 @@ class Sentry implements LoggerInterface
     {
         $data = new UserDataBag();
         $data->setId((string) ($context['uid'] ?? '0'));
-        $data->setIpAddress($context['ip']);
+
+        try {
+            $data->setIpAddress($context['ip']);
+        } catch (\InvalidArgumentException $e) {
+        }
 
         if ($uid = $data->getId()) {
             /** @var UserInterface $user */
