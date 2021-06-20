@@ -27,7 +27,7 @@ function _wmsentry_error_handler_real($error_level, $message, $filename, $line, 
         _drupal_log_error([
             '%type' => isset($types[$error_level]) ? $severity_msg : 'Unknown error',
             // The standard PHP error handler considers that the error messages
-            // are HTML. We mimick this behavior here.
+            // are HTML. We mimic this behavior here.
             '@message' => Markup::create(Xss::filterAdmin($message)),
             '%function' => $caller['function'],
             '%file' => $caller['file'],
@@ -35,19 +35,26 @@ function _wmsentry_error_handler_real($error_level, $message, $filename, $line, 
             'severity_level' => $severity_level,
             'backtrace' => $backtrace,
             '@backtrace_string' => (new \Exception())->getTraceAsString(),
+            'exception' => NULL,
         ], $recoverable || $to_string);
     }
     // If the site is a test site then fail for user deprecations so they can be
     // caught by the deprecation error handler.
     elseif (DRUPAL_TEST_IN_CHILD_SITE && $error_level === E_USER_DEPRECATED) {
-        $backtrace = debug_backtrace();
-        $caller = Error::getLastCaller($backtrace);
-        _drupal_error_header(
-            Markup::create(Xss::filterAdmin($message)),
-            'User deprecated function',
-            $caller['function'],
-            $caller['file'],
-            $caller['line']
-        );
+        static $seen = [];
+        if (array_search($message, $seen, TRUE) === FALSE) {
+            // Only report each deprecation once. Too many headers can break some
+            // Chrome and web driver testing.
+            $seen[] = $message;
+            $backtrace = debug_backtrace();
+            $caller = Error::getLastCaller($backtrace);
+            _drupal_error_header(
+                Markup::create(Xss::filterAdmin($message)),
+                'User deprecated function',
+                $caller['function'],
+                $caller['file'],
+                $caller['line']
+            );
+        }
     }
 }
