@@ -5,7 +5,7 @@ wmsentry
 [![Total Downloads](https://poser.pugx.org/wieni/wmsentry/downloads)](https://packagist.org/packages/wieni/wmsentry)
 [![License](https://poser.pugx.org/wieni/wmsentry/license)](https://packagist.org/packages/wieni/wmsentry)
 
-> A module for sending errors to Sentry in Drupal 8.
+> A module for sending errors to Sentry in Drupal 9.
 
 ## Why?
 - We use [Sentry](https://sentry.io) to monitor our sites and to track
@@ -14,7 +14,7 @@ wmsentry
   with Drupal, using v2 of the Sentry SDK.
 
 ## Installation
-This module requires PHP 7.2 or higher and uses the Sentry PHP package
+This module requires PHP 8.0 or higher and uses the Sentry PHP package
 ([`sentry/sentry`](https://github.com/getsentry/sentry-php)), which is
 not tied to any specific library that sends HTTP messages. Instead, it
 uses [Httplug](https://github.com/php-http/httplug) to let users choose

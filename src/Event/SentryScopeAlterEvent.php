@@ -3,7 +3,7 @@
 namespace Drupal\wmsentry\Event;
 
 use Sentry\State\Scope;
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 
 class SentryScopeAlterEvent extends Event
 {
