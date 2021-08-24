@@ -3,7 +3,7 @@
 namespace Drupal\wmsentry\Event;
 
 use Sentry\Breadcrumb;
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 
 class SentryBeforeBreadcrumbEvent extends Event
 {

@@ -105,8 +105,8 @@ class Sentry implements LoggerInterface
     {
         /** @var SentryBeforeSendEvent $beforeSendEvent */
         $beforeSendEvent = $this->eventDispatcher->dispatch(
-            WmsentryEvents::BEFORE_SEND,
-            new SentryBeforeSendEvent($event)
+            new SentryBeforeSendEvent($event),
+            WmsentryEvents::BEFORE_SEND
         );
 
         return $beforeSendEvent->isExcluded() ? null : $beforeSendEvent->getEvent();
@@ -116,8 +116,8 @@ class Sentry implements LoggerInterface
     {
         /** @var SentryBeforeBreadcrumbEvent $beforeBreadcrumbEvent */
         $beforeBreadcrumbEvent = $this->eventDispatcher->dispatch(
-            WmsentryEvents::BEFORE_BREADCRUMB,
-            new SentryBeforeBreadcrumbEvent($breadcrumb)
+            new SentryBeforeBreadcrumbEvent($breadcrumb),
+            WmsentryEvents::BEFORE_BREADCRUMB
         );
 
         return $beforeBreadcrumbEvent->isExcluded() ? null : $beforeBreadcrumbEvent->getBreadcrumb();
@@ -201,8 +201,8 @@ class Sentry implements LoggerInterface
 
         withScope(function (Scope $scope) use ($event, $eventHint, $context): void {
             $this->eventDispatcher->dispatch(
-                WmsentryEvents::SCOPE_ALTER,
-                new SentryScopeAlterEvent($scope, $context)
+                new SentryScopeAlterEvent($scope, $context),
+                WmsentryEvents::SCOPE_ALTER
             );
 
             captureEvent($event, $eventHint);
@@ -240,8 +240,8 @@ class Sentry implements LoggerInterface
         }
 
         $this->eventDispatcher->dispatch(
-            WmsentryEvents::OPTIONS_ALTER,
-            new SentryOptionsAlterEvent($options)
+            new SentryOptionsAlterEvent($options),
+            WmsentryEvents::OPTIONS_ALTER
         );
 
         return $this->client = (new ClientBuilder($options))->getClient();

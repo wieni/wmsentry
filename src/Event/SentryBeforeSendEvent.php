@@ -3,7 +3,7 @@
 namespace Drupal\wmsentry\Event;
 
 use Sentry\Event;
-use Symfony\Component\EventDispatcher\Event as EventBase;
+use Drupal\Component\EventDispatcher\Event as EventBase;
 
 class SentryBeforeSendEvent extends EventBase
 {
