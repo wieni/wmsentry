@@ -1,7 +1,7 @@
 {
     "name": "wieni/wmsentry",
     "type": "drupal-module",
-    "description": "A module for sending errors to Sentry in Drupal 8.",
+    "description": "A module for sending errors to Sentry in Drupal 9.",
     "license": "MIT",
     "authors": [
         {
@@ -10,14 +10,14 @@
         }
     ],
     "require": {
-        "php": "^7.2 || ^8.0",
+        "php": "^8.0",
         "drupal/core": "^9.1",
         "sentry/sentry": "^3.1.1"
     },
     "require-dev": {
         "composer-runtime-api": "^2.0",
         "ergebnis/composer-normalize": "^2.0",
-        "wieni/wmcodestyle": "^1.3"
+        "wieni/wmcodestyle": "^1.7"
     },
     "repositories": [
         {
