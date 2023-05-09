@@ -1,8 +1,7 @@
 name: wmsentry
 type: module
 description: A module for sending errors to Sentry in Drupal 8.
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9.1 || ^10
 package: Wieni
 dependencies:
     - drupal:user
