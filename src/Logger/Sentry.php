@@ -174,7 +174,7 @@ class Sentry implements LoggerInterface
 
         $event->setExtra(array_reduce(
             ['link', 'referer', 'request_uri'],
-            static function (array $tags, string $key) {
+            static function (array $tags, string $key) use ($context) {
                 if (isset($context[$key])) {
                     $tags[$key] = $context[$key];
                 }
