@@ -74,11 +74,11 @@ class SetReleaseController implements ContainerInjectionInterface
         try {
             $destination = $this->destination->get();
             $url = Url::fromUserInput($destination)->setAbsolute()->toString();
-            return RedirectResponse::create($url);
+            return new RedirectResponse($url);
         } catch (\InvalidArgumentException $e) {
         }
 
-        return Response::create();
+        return new Response();
     }
 
     protected function isValidToken(?string $token, ?int $timestamp): bool
