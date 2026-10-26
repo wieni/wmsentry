@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-10-26
+### Added
+- Drupal 12 support.
+
+### Fixed
+- Unsetting the release used `Response::create()` and `RedirectResponse::create()`, which Symfony 6 removed.
+- Exception log entries include their context in the event's extra data. The closure that builds it didn't capture
+  `$context`.
+- With sentry/sentry 3.17 to 3.22, sending an event during a request no longer raises the `withPort()` deprecation of
+  guzzlehttp/psr7 2.11.
+
+### Removed
+- Support for Drupal before 11.4 and PHP before 8.2. The module now requires Drupal `^11.4 || ^12` and PHP 8.2 or
+  higher.
+
 ## [2.0.0] - 2021-08-24
 ### Fixed
 - Fix Drupal 9.1 Event dispatching deprecations (https://www.drupal.org/node/3159012 and https://www.drupal.org/node/3154407) 
