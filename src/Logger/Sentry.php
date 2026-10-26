@@ -16,12 +16,14 @@ use Drupal\wmsentry\Event\SentryBeforeBreadcrumbEvent;
 use Drupal\wmsentry\Event\SentryBeforeSendEvent;
 use Drupal\wmsentry\Event\SentryOptionsAlterEvent;
 use Drupal\wmsentry\Event\SentryScopeAlterEvent;
+use Drupal\wmsentry\Integration\RequestFetcher;
 use Drupal\wmsentry\WmsentryEvents;
 use Drush\Drush;
 use Psr\Log\LoggerInterface;
 use Sentry\EventHint;
 use Sentry\Integration\EnvironmentIntegration;
 use Sentry\Integration\FrameContextifierIntegration;
+use Sentry\Integration\RequestFetcherInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\StacktraceBuilder;
@@ -30,6 +32,7 @@ use function Sentry\addBreadcrumb;
 use Sentry\Breadcrumb;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
+use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -224,7 +227,7 @@ class Sentry implements LoggerInterface
             'in_app_include' => $this->normalizePaths($this->config->get('in_app_include') ?? []),
             'default_integrations' => false,
             'integrations' => [
-                new RequestIntegration(),
+                new RequestIntegration($this->getRequestFetcher()),
                 new TransactionIntegration(),
                 new FrameContextifierIntegration(),
                 new EnvironmentIntegration(),
@@ -245,6 +248,23 @@ class Sentry implements LoggerInterface
         );
 
         return $this->client = (new ClientBuilder($options))->getClient();
+    }
+
+    protected function getRequestFetcher(): ?RequestFetcherInterface
+    {
+        // sentry/sentry 3.17 to 3.22 fetch the request in a way that passes
+        // a string to UriInterface::withPort(), see RequestFetcher.
+        // Other versions use guzzlehttp/psr7's ServerRequest::fromGlobals().
+        if (
+            defined(Client::class . '::SDK_VERSION')
+            && version_compare(Client::SDK_VERSION, '3.17.0', '>=')
+            && version_compare(Client::SDK_VERSION, '4.0.0', '<')
+        ) {
+            return new RequestFetcher();
+        }
+
+        // Sentry's own request fetcher.
+        return null;
     }
 
     protected function getLogLevel(int $rfc): ?Severity
