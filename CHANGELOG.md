@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- The Sentry client is created the first time something is logged, or a Drush command fails, instead of when the logger
+  is instantiated. Drupal instantiates the logger on practically every request, so the many requests that log nothing no
+  longer pay for building the client. The Drupal error handler is still replaced when the logger is instantiated.
+- Because of that, `WmsentryEvents::OPTIONS_ALTER` is dispatched on first use, and an invalid DSN now throws from the
+  first log call instead of while the service container is built. Code that calls `\Sentry\captureException()` or
+  `\Sentry\addBreadcrumb()` directly before anything has been logged no longer finds a bound client.
+
 ## [2.0.0] - 2021-08-24
 ### Fixed
 - Fix Drupal 9.1 Event dispatching deprecations (https://www.drupal.org/node/3159012 and https://www.drupal.org/node/3154407) 

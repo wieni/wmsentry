@@ -80,13 +80,6 @@ class Sentry implements LoggerInterface
         $this->eventDispatcher = $eventDispatcher;
         $this->moduleHandler = $moduleHandler;
         $this->entityTypeManager = $entityTypeManager;
-        $this->client = $this->getClient();
-        $this->stackTraceBuilder = new StacktraceBuilder(
-            $this->client->getOptions(),
-            new RepresentationSerializer($this->client->getOptions())
-        );
-
-        SentrySdk::getCurrentHub()->bindClient($this->client);
 
         /**
          * Replace the Drupal error handler
@@ -125,12 +118,14 @@ class Sentry implements LoggerInterface
 
     public function log($level, $message, array $context = []): void
     {
+        $this->bindClient();
         $this->logException($level, $message, $context);
         $this->logBreadcrumb($level, $message, $context);
     }
 
     public function logDrush(ConsoleErrorEvent $event): void
     {
+        $this->bindClient();
         captureException($event->getError());
     }
 
@@ -207,6 +202,29 @@ class Sentry implements LoggerInterface
 
             captureEvent($event, $eventHint);
         });
+    }
+
+    /**
+     * Create the client and bind it to the Sentry hub, once.
+     *
+     * Drupal instantiates every logger on practically every request, but most
+     * requests never log anything. Building the client (resolving the options,
+     * dispatching the options alter event, creating the integrations) in the
+     * constructor made all of them pay for it, so this runs on first use.
+     */
+    protected function bindClient(): void
+    {
+        if (isset($this->stackTraceBuilder)) {
+            return;
+        }
+
+        $client = $this->getClient();
+        $this->stackTraceBuilder = new StacktraceBuilder(
+            $client->getOptions(),
+            new RepresentationSerializer($client->getOptions())
+        );
+
+        SentrySdk::getCurrentHub()->bindClient($client);
     }
 
     protected function getClient(): ?ClientInterface
