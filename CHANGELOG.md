@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.3.1 and 2.2.1] - 2026-10-27
+
 ### Changed
 - The Sentry client is created the first time something is logged, or a Drush command fails, instead of when the logger
   is instantiated. Drupal instantiates the logger on practically every request, so the many requests that log nothing no
