@@ -67,7 +67,8 @@ fingerprints etc.
 #### `Drupal\wmsentry\WmsentryEvents::OPTIONS_ALTER`
 This function is called before the client is created with an options
 object. The options object is a configuration container for the Sentry
-client.
+client. The client is created the first time something is logged, so
+the event is not dispatched during requests that log nothing.
 
 ### Setting the release ID through an HTTP endpoint
 This module provides an HTTP endpoint that can be used to set the Sentry release ID without being logged in. This can 
