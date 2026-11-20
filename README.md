@@ -15,15 +15,25 @@ wmsentry
 
 ## Installation
 This module requires PHP 8.2 or higher and uses the Sentry PHP package
-([`sentry/sentry`](https://github.com/getsentry/sentry-php)), which is
-not tied to any specific library that sends HTTP messages. Instead, it
-uses [Httplug](https://github.com/php-http/httplug) to let users choose
-whichever PSR-7 implementation and HTTP client they want to use.
-
-If you just want to get started quickly you should run the following command:
+([`sentry/sentry`](https://github.com/getsentry/sentry-php)), version 3
+or 4.
 
 ```bash
-composer require wieni/wmsentry nyholm/psr7 php-http/guzzle6-adapter
+composer require wieni/wmsentry
+```
+
+On Drupal 12 Composer installs version 4 of `sentry/sentry`: version 3
+can't be installed next to Symfony 8. Version 4 sends events with the
+PHP `curl` extension, so it doesn't need a separate HTTP client or PSR-7
+implementation. It only sends to the envelope endpoint, which
+self-hosted Sentry supports since 20.6.0.
+
+Version 3 of `sentry/sentry` isn't tied to a specific HTTP client.
+It uses [Httplug](https://github.com/php-http/httplug) to let you choose
+whichever PSR-7 implementation and HTTP client you want, e.g.:
+
+```bash
+composer require wieni/wmsentry sentry/sentry:^3 nyholm/psr7 php-http/guzzle7-adapter
 ```
 For more information, please refer to the _Install_ section of the [`sentry/sentry-php`](https://github.com/getsentry/sentry-php#install) repository README.
 
