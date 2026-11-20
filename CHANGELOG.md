@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Support for version 4 of `sentry/sentry` (`^3.1.1 || ^4.2`). Version 3 can't be installed next to Drupal 12: it
+  requires `symfony/options-resolver` up to 7 and `guzzlehttp/promises` 1 or 2. Version 4.36 and later allow Symfony 8
+  and `guzzlehttp/psr7` 3. 4.0 and 4.1 are excluded because they don't send the event's logger, which this module
+  sets to the log channel.
+
+### Changed
+When Composer installs version 4 of `sentry/sentry` (always on Drupal 12, after a `composer update` elsewhere):
+- Events are sent to the envelope endpoint with the `curl` extension instead of an Httplug client. Self-hosted Sentry
+  needs to be 20.6.0 or later.
+- Errors of failing Drush commands no longer have `php` as their logger. Sentry 3 filled it in from its `logger`
+  option, which is a PSR-3 logger in version 4. Log entries still have their channel as their logger.
+- The `WmsentryEvents` subscribers get Sentry 4 objects. Check them against Sentry's
+  [upgrade guide](https://github.com/getsentry/sentry-php/blob/master/UPGRADE-4.0.md), e.g. `Options::setSendAttempts()`
+  and `Options::setEnableCompression()` were removed.
+- An Httplug client and PSR-7 implementation that a project only requires for `sentry/sentry` 3 can be removed.
+
 ## [2.3.1 and 2.2.1] - 2026-10-27
 
 ### Changed
